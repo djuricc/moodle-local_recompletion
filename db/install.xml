@@ -519,7 +519,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_recompletion_ag" COMMENT="archive of assign_grades table">
+    <TABLE NAME="local_recompletion_assign_grades" COMMENT="archive of assign_grades table">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -539,9 +539,10 @@
         <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" COMMENT="The userid for the submission relating to this grade."/>
         <INDEX NAME="attemptnumber" UNIQUE="false" FIELDS="attemptnumber"/>
         <INDEX NAME="uniqueattemptgrade" UNIQUE="true" FIELDS="assignment, userid, attemptnumber" COMMENT="This is a grade for a unique attempt."/>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
       </INDEXES>    
     </TABLE>
-    <TABLE NAME="local_recompletion_as" COMMENT="archive of assign_submission table">
+    <TABLE NAME="local_recompletion_assign_submission" COMMENT="archive of assign_submission table">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -564,6 +565,7 @@
         <INDEX NAME="attemptnumber" UNIQUE="false" FIELDS="attemptnumber"/>
         <INDEX NAME="uniqueattemptsubmission" UNIQUE="true" FIELDS="assignment, userid, groupid, attemptnumber"/>
         <INDEX NAME="latestattempt" UNIQUE="false" FIELDS="assignment, userid, groupid, latest" COMMENT="Speed up queries for the latest attempt."/>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
       </INDEXES>
     </TABLE>
   </TABLES>

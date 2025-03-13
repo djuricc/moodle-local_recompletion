@@ -138,28 +138,27 @@ class mod_assign {
 
         } else if ($config->assign == LOCAL_RECOMPLETION_DELETE) {
 
-            $params = array('userid' => $userid, 'course' => $course->id);
-
-            $selectsql = 'userid = ? AND assignment IN (SELECT id FROM {assign} WHERE course = ?)';
+            $selectsql = "userid = $userid AND assignment IN (SELECT id FROM {assign} WHERE course = $course->id)";
             if ($config->archiveassign) {
-                $assignsubmissions = $DB->get_records_select('assign_submission', $selectsql, $params);
-                foreach ($assignsubmissions as $aid => $unused) {
+                $assignsubmissions = $DB->get_records_select('assign_submission', $selectsql);
+                foreach ($assignsubmissions as $asid => $unused) {
                     // Add courseid to records to help with restore process.
-                    $assignsubmissions[$aid]->course = $course->id;
+                    $assignsubmissions[$asid]->course = $course->id;
                 }
-                $DB->insert_records('local_recompletion_as', $assignsubmissions);
+                $DB->insert_records('local_recompletion_assign_submission', $assignsubmissions);
 
-                $assigngrades = $DB->get_records_select('assign_grades', $selectsql, $params);
-                foreach ($assigngrades as $aid => $unused) {
-                    $assigngrades[$aid]->course = $course->id;
+                $assigngrades = $DB->get_records_select('assign_grades', $selectsql);
+                foreach ($assigngrades as $agid => $unused) {
+                    // Add courseid to records to help with restore process.
+                    $assigngrades[$agid]->course = $course->id;
                 }
-                $DB->insert_records('local_recompletion_ag', $assigngrades);
+                $DB->insert_records('local_recompletion_assign_grades', $assigngrades);
             }
             $DB->delete_records_select('assign_submission', $selectsql, $params);
             $DB->delete_records_select('assign_grades', $selectsql, $params);
             if (!empty($config->resetassignoverride)) {
-                $selectsql = 'userid = ? AND assignid IN (SELECT id FROM {assign} WHERE course = ?)';
-                $DB->delete_records_select('assign_overrides', $selectsql, $params);
+                $selectsql = "userid = $userid AND assignid IN (SELECT id FROM {assign} WHERE course = $course->id)";
+                $DB->delete_records_select('assign_overrides', $selectsql);
             }
         }
         return '';
