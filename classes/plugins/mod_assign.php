@@ -50,17 +50,29 @@ class mod_assign {
         $cba[] = $mform->createElement('radio', 'assign', '',
             get_string('donothing', 'local_recompletion'), LOCAL_RECOMPLETION_NOTHING);
         $cba[] = $mform->createElement('radio', 'assign', '',
+            get_string('delete', 'local_recompletion'), LOCAL_RECOMPLETION_DELETE);
+        $cba[] = $mform->createElement('radio', 'assign', '',
             get_string('extraattempt', 'local_recompletion'), LOCAL_RECOMPLETION_EXTRAATTEMPT);
 
         $mform->addGroup($cba, 'assign', get_string('assignattempts', 'local_recompletion'), array(' '), false);
         $mform->addHelpButton('assign', 'assignattempts', 'local_recompletion');
         $mform->setDefault('assign', $config->assign);
 
+        $mform->addElement('checkbox', 'archiveassign',
+            get_string('archive', 'local_recompletion'));
+        $mform->setDefault('archiveassign', $config->archivequiz);
+
+        $mform->addElement('checkbox', 'resetassignoverride',
+            get_string('resetassignoverride', 'local_recompletion'));
+        $mform->setDefault('resetassignoverride', $config->resetassignoverride);
+
         $mform->addElement('checkbox', 'assignevent', '', get_string('assignevent', 'local_recompletion'));
         $mform->setDefault('assignevent', $config->assignevent);
 
         $mform->disabledIf('assignevent', 'enable', 'notchecked');
         $mform->disabledIf('assign', 'enable', 'notchecked');
+        $mform->hideIf('archiveassign', 'assign', 'noteq', LOCAL_RECOMPLETION_DELETE);
+        $mform->hideIf('resetassignoverride', 'assign', 'noteq', LOCAL_RECOMPLETION_DELETE);
     }
 
     /**
@@ -70,6 +82,7 @@ class mod_assign {
      */
     public static function settings($settings) {
         $choices = array(LOCAL_RECOMPLETION_NOTHING => new lang_string('donothing', 'local_recompletion'),
+            LOCAL_RECOMPLETION_DELETE => new lang_string('delete', 'local_recompletion'),
             LOCAL_RECOMPLETION_EXTRAATTEMPT => new lang_string('extraattempt', 'local_recompletion'));
 
         $settings->add(new \admin_setting_configselect('local_recompletion/assign',
@@ -79,6 +92,12 @@ class mod_assign {
         $settings->add(new \admin_setting_configcheckbox('local_recompletion/assignevent',
             new lang_string('assignevent', 'local_recompletion'),
             '', 0));
+
+        $settings->add(new \admin_setting_configcheckbox('local_recompletion/archiveassign',
+            new lang_string('archiveassign', 'local_recompletion'), '', 1));
+
+        $settings->add(new \admin_setting_configcheckbox('local_recompletion/resetassignoverride',
+            new lang_string('resetassignoverride', 'local_recompletion'), '', 0));
     }
 
     /**
@@ -113,6 +132,34 @@ class mod_assign {
             }
             if ($nopermissions) {
                 return get_string('noassigngradepermission', 'local_recompletion');
+            }
+
+
+
+        } else if ($config->assign == LOCAL_RECOMPLETION_DELETE) {
+
+            $params = array('userid' => $userid, 'course' => $course->id);
+
+            $selectsql = 'userid = ? AND assignment IN (SELECT id FROM {assign} WHERE course = ?)';
+            if ($config->archiveassign) {
+                $assignsubmissions = $DB->get_records_select('assign_submission', $selectsql, $params);
+                foreach ($assignsubmissions as $aid => $unused) {
+                    // Add courseid to records to help with restore process.
+                    $assignsubmissions[$aid]->course = $course->id;
+                }
+                $DB->insert_records('local_recompletion_as', $assignsubmissions);
+
+                $assigngrades = $DB->get_records_select('assign_grades', $selectsql, $params);
+                foreach ($assigngrades as $aid => $unused) {
+                    $assigngrades[$aid]->course = $course->id;
+                }
+                $DB->insert_records('local_recompletion_ag', $assigngrades);
+            }
+            $DB->delete_records_select('assign_submission', $selectsql, $params);
+            $DB->delete_records_select('assign_grades', $selectsql, $params);
+            if (!empty($config->resetassignoverride)) {
+                $selectsql = 'userid = ? AND assignid IN (SELECT id FROM {assign} WHERE course = ?)';
+                $DB->delete_records_select('assign_overrides', $selectsql, $params);
             }
         }
         return '';

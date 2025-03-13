@@ -287,3 +287,5 @@ $string['entity:local_recompletion_cert'] = 'Archive of issued certificates (mod
 $string['datasource:local_recompletion_cert'] = 'Archive of issued certificates (mod_certificate)';
 $string['entity:local_recompletion_ccert_is'] = 'Archive of issued certificates (mod_customcert)';
 $string['datasource:local_recompletion_ccert_is'] = 'Archive of issued certificates (mod_customcert)';
+$string['archiveassign'] = 'Archive old assignment attempts';
+$string['resetassignoverride'] = 'Reset assignment user overrides';
