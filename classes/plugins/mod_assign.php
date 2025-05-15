@@ -137,17 +137,17 @@ class mod_assign {
 
 
         } else if ($config->assign == LOCAL_RECOMPLETION_DELETE) {
-
-            $selectsql = "userid = $userid AND assignment IN (SELECT id FROM {assign} WHERE course = $course->id)";
+            $params = array('userid' => $userid, 'course' => $course->id);
+            $selectsql = "userid = ? AND assignment IN (SELECT id FROM {assign} WHERE course = ?)";
             if ($config->archiveassign) {
-                $assignsubmissions = $DB->get_records_select('assign_submission', $selectsql);
+                $assignsubmissions = $DB->get_records_select('assign_submission', $selectsql, $params);
                 foreach ($assignsubmissions as $asid => $unused) {
                     // Add courseid to records to help with restore process.
                     $assignsubmissions[$asid]->course = $course->id;
                 }
                 $DB->insert_records('local_recompletion_assign_submission', $assignsubmissions);
 
-                $assigngrades = $DB->get_records_select('assign_grades', $selectsql);
+                $assigngrades = $DB->get_records_select('assign_grades', $selectsql, $params);
                 foreach ($assigngrades as $agid => $unused) {
                     // Add courseid to records to help with restore process.
                     $assigngrades[$agid]->course = $course->id;
@@ -157,8 +157,8 @@ class mod_assign {
             $DB->delete_records_select('assign_submission', $selectsql, $params);
             $DB->delete_records_select('assign_grades', $selectsql, $params);
             if (!empty($config->resetassignoverride)) {
-                $selectsql = "userid = $userid AND assignid IN (SELECT id FROM {assign} WHERE course = $course->id)";
-                $DB->delete_records_select('assign_overrides', $selectsql);
+                $selectsql = "userid = ? AND assignid IN (SELECT id FROM {assign} WHERE course = ?)";
+                $DB->delete_records_select('assign_overrides', $selectsql, $params);
             }
         }
         return '';
